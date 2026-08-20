@@ -7,6 +7,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Mapping
 
+from .secrets import SecretProviderError, read_secret_file
+
 
 TRUE_VALUES = {"1", "true", "yes", "on"}
 FALSE_VALUES = {"0", "false", "no", "off"}
@@ -39,9 +41,18 @@ def parse_chat_ids(raw: str) -> frozenset[str]:
     return frozenset(part.strip() for part in raw.split(",") if part.strip())
 
 
+def parse_choice(name: str, raw: str, choices: set[str]) -> str:
+    value = raw.strip().lower()
+    if value not in choices:
+        raise ConfigError(f"{name} must be one of {', '.join(sorted(choices))}")
+    return value
+
+
 @dataclass(frozen=True)
 class BotConfig:
     project_root: Path
+    secret_mode: str
+    secret_file: Path | None
     approved_state_root: Path
     allowed_chat_ids: frozenset[str]
     dry_run: bool
@@ -78,8 +89,26 @@ class BotConfig:
         state = Path(state_raw).expanduser()
         if not state.is_absolute():
             state = root / state
+        secret_mode = parse_choice(
+            "BOT_SECRET_MODE",
+            values.get("BOT_SECRET_MODE", "env"),
+            {"env", "file"},
+        )
+        secret_file: Path | None = None
+        if secret_mode == "file":
+            secret_file_raw = values.get(
+                "BOT_SECRET_FILE", "./secrets/local-secrets.txt"
+            ).strip()
+            if not secret_file_raw:
+                raise ConfigError("BOT_SECRET_FILE must be set when BOT_SECRET_MODE=file")
+            secret_file = Path(secret_file_raw).expanduser()
+            if not secret_file.is_absolute():
+                secret_file = root / secret_file
+            secret_file = secret_file.resolve()
         config = cls(
             project_root=root,
+            secret_mode=secret_mode,
+            secret_file=secret_file,
             approved_state_root=state_root,
             allowed_chat_ids=parse_chat_ids(values.get("BOT_ALLOWED_CHAT_IDS", "")),
             dry_run=parse_bool("BOT_DRY_RUN", values.get("BOT_DRY_RUN", "true")),
@@ -142,10 +171,18 @@ class BotConfig:
             raise ConfigError(
                 "generic write mode is forbidden; register and review one exact capability"
             )
+        if live and self.secret_mode == "file":
+            assert self.secret_file is not None
+            try:
+                read_secret_file(self.secret_file)
+            except SecretProviderError as exc:
+                raise ConfigError(str(exc)) from exc
 
     def public_summary(self) -> dict[str, object]:
         return {
             "project_root": str(self.project_root),
+            "secret_mode": self.secret_mode,
+            "secret_file_configured": self.secret_file is not None,
             "approved_state_root": str(self.approved_state_root),
             "allowed_chat_count": len(self.allowed_chat_ids),
             "dry_run": self.dry_run,

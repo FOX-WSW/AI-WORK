@@ -1,95 +1,130 @@
 ---
 name: project-agent-bootstrap
-description: Build, modernize, or audit a project-specific intelligent bot with Feishu/Lark and Codex, including requirements intake, secure scaffolding, read-only data/code/log tools, topic-level sessions, reliability controls, validation, and deployment preparation. Use when a user asks to quickly create a project bot, reproduce an existing project assistant for another project, collect the Feishu/database/environment information needed for setup, generate a reusable bot starter, or assess whether a bot is safe to deploy.
+description: Guide a non-technical customer from “I want my own bot” through adaptive resource intake, raw/wiki/maps knowledge-base construction, secure project-bot scaffolding, integration, validation, and authorized deployment. Use when a user wants to create, reproduce, modernize, audit, or deploy a project bot from local documents, cloud documents, databases, code repositories, logs, and project environments.
 ---
 
 # Project Agent Bootstrap
 
-Build a project bot from a small, security-first foundation. Keep business reasoning inside the Agent runtime and keep authentication, authorization, idempotency, and side-effect control in deterministic outer adapters.
+Turn incomplete customer materials into a traceable knowledge base and a safely deployable project bot. From the customer's perspective this is one guided Skill; internally keep onboarding, knowledge building, bot generation, deployment, and knowledge maintenance as separate modes.
 
-## Choose the work mode
+## Route the request
 
-Identify the requested mode before changing files:
+- `onboard`: the user says “我想部署一个自己的机器人” or cannot provide a technical specification. Discover what already exists, ask only for missing decisions, and produce a resource-gap report.
+- `build-knowledge`: inventory original sources, create the `raw/wiki/maps/evidence/sync` structure, and perform the first evidence-based knowledge pass.
+- `build-bot`: generate or extend the project-bot starter and connect only the capabilities supported by ready resources.
+- `integrate`: connect messaging, Codex, cloud documents, databases, repositories, logs, or artifact delivery.
+- `audit`: inspect an existing bot and rank safety, reliability, knowledge, and deployment gaps.
+- `deploy-and-operate`: validate, install, verify, monitor, roll back, or maintain a service only after the user authorizes the external changes.
+- `publish`: publish only sanitized generic Skill or scaffold files to an explicitly selected destination.
 
-- `intake`: list what the user must provide and produce a fillable blueprint.
-- `scaffold`: generate a new starter project from `assets/project-bot-starter/`.
-- `integrate`: connect Feishu, Codex, databases, code repositories, logs, or document delivery.
-- `audit`: inspect an existing bot and rank changes by safety, reliability, and maintainability.
-- `deploy`: validate and install a service only after the user explicitly authorizes the external writes involved.
-- `publish`: upload only the sanitized reusable Skill or scaffold to an explicitly selected GitHub destination.
+Combine modes when needed, but report a separate readiness state for inventory, scaffold, dry-run, and live read-only operation.
 
-Combine modes when requested. For an existing bot, audit first and preserve unrelated user changes.
+## Start with guided onboarding
 
-## Collect the minimum project facts
+When the user asks to deploy a bot, do not begin with a long technical interrogation. First inspect the available workspace and links, then follow [references/onboarding-workflow.md](references/onboarding-workflow.md).
 
-Read [references/intake-checklist.md](references/intake-checklist.md) whenever required facts are missing. Resolve facts from the workspace before asking the user.
+Ask no more than three business-language questions in the first turn and accept “不知道，需要 IT 协助”. Infer the slug, package name, and default workspace path; never ask a non-technical customer to edit JSON or supply command-line parameters. Default the first version to document Q&A when the customer is unsure, then add code, database, and log capabilities only when requested. Collect project scope, users and roles, channel, deployment host, local and cloud documents, functional designs, database environments, repositories, logs, cloud services, and safety boundaries in later small batches. Missing optional resources must not block a document-only bot.
 
-Ask only for decisions that materially change the result. Never ask the user to paste real passwords, tokens, cookies, private keys, or production connection strings into chat. Ask them to place secrets in their approved secret store or local environment and provide only the environment-variable names or a confirmation that they are set.
+The current bundled runtime starter targets Feishu. Other channel choices may be captured during onboarding for future integration, but they must remain `ready_to_scaffold=false` until a channel-specific adapter and live acceptance tests are added. Do not silently generate a Feishu-shaped project for another platform.
 
-At minimum, establish:
+Never ask the user to paste secret values into chat. Two secret methods are supported:
 
-1. Project name, project root, business scope, owners, and expected answer style.
-2. Feishu tenant/app readiness, bot identity, event subscription, target chat allowlist, and needed scopes.
-3. Codex path/version, runtime model, sandbox, timeout, and topic-session policy.
-4. Each data source's engine, environment label, read-only account, schema, network/VPN needs, row limit, and timeout.
-5. Code repositories, allowed branches, documentation roots, log provider, and artifact types.
-6. Host OS, service manager, working directory, retention, monitoring, and rollback expectations.
-7. Whether any real write capability is required. Default to none.
+- `env`: values are injected through environment variables.
+- `file`: values are stored locally in a TXT file using `KEY=VALUE`, normally `secrets/local-secrets.txt`. The file must be excluded from Git and knowledge ingestion, must not be a symbolic link, and on POSIX must have mode `0600`.
 
-If credentials are not ready, continue with placeholders and a preflight report instead of blocking the scaffold.
+Only secret names and readiness states may appear in reports.
 
-## Generate the starter safely
+Initialize the onboarding workspace with the bundled script:
 
-Run the bundled scaffolder for a new project:
+```bash
+python scripts/onboard_project_bot.py init \
+  --name "示例项目" \
+  --channel feishu \
+  --deployment systemd \
+  --secret-mode env \
+  --raw-mode reference \
+  --capabilities document_qa
+```
+
+After the non-secret intake file is completed:
+
+```bash
+python scripts/onboard_project_bot.py assess --workspace "/absolute/output/path"
+python scripts/onboard_project_bot.py status --workspace "/absolute/output/path"
+python scripts/onboard_project_bot.py inventory --workspace "/absolute/output/path"
+```
+
+`assess` is expected to report missing resources during early onboarding; incompleteness is not an execution failure. Show the customer `outputs/搭建进度.md` rather than exposing raw field names. Update `customer-intake.json` on the customer's behalf after each answer batch.
+
+## Build the knowledge base before the live bot
+
+Read [references/knowledge-build-workflow.md](references/knowledge-build-workflow.md) before performing first-round semantic organization. Preserve original evidence and provenance. Do not invent table relationships, business statuses, code entry points, or source priority.
+
+The standard knowledge layout is:
+
+```text
+knowledge/
+├── raw/       original files or references plus source manifest
+├── wiki/      human-readable project knowledge
+├── maps/      deterministic source/data/business/code/log/role navigation
+├── evidence/  quality, conflict, uncertainty, and verification records
+└── sync/      freshness and incremental-update state
+```
+
+Prefer bounded keyword and relationship-map retrieval for rapidly changing project documents and code. Use semantic retrieval only when the source is stable and it materially improves recall. The most useful navigation chain is:
+
+`business function -> page -> API -> service -> code -> table/view -> log keyword -> known issue`
+
+After `inventory`, produce a useful first pass rather than returning empty placeholders: populate the project overview, source map, environment boundary, repository index, and role/code/log maps from direct intake or file evidence. Clearly mark questionnaire-only facts as `provided_unverified`; never invent business flows, table relationships, or code entry points. Runtime experience must enter a candidate area first. Only reviewed evidence may update authoritative Wiki or maps. Keep scheduled source synchronization separate from answering user questions.
+
+## Generate the bot safely
+
+Use the existing scaffold generator after `ready_to_scaffold=true`:
 
 ```bash
 python scripts/scaffold_project_bot.py \
   --name "示例项目智能机器人" \
   --slug "example-project-bot" \
-  --output "/absolute/output/path" \
-  --service launchd \
+  --output "/absolute/bot/path" \
+  --service systemd \
+  --secret-mode env \
   --databases oracle \
-  --database-env UAT:oracle \
-  --database-env PROD_DG:oracle
+  --database-env UAT:oracle
 ```
 
-Use `systemd` or `none` for other deployment targets. Supply `--slug` for Chinese or other non-ASCII project names. The script refuses to overwrite a non-empty directory and never accepts secret values as arguments.
+When the onboarding workspace already exists, prefer importing it so the bot receives the selected secret mode, deployment settings, database environments, and knowledge tree:
 
-The generated starter is intentionally small and sets `scaffold_only=true`. Its service file is a one-shot strict preflight template, not a running bot. Extend its adapter interfaces, add a real `serve` entrypoint, and complete live tests before changing the readiness marker. Follow [references/architecture.md](references/architecture.md) for module boundaries and migration order.
+```bash
+python scripts/scaffold_project_bot.py \
+  --intake "/absolute/workspace/intake/customer-intake.json" \
+  --output "/absolute/bot/path"
+```
 
-## Apply hard safety defaults
+For a non-technical customer, prefer the one-step workspace command after both inventory and scaffold gates pass:
 
-Keep these defaults unless the user explicitly narrows and authorizes a change:
+```bash
+python scripts/onboard_project_bot.py build-bot --workspace "/absolute/workspace"
+```
 
-- Require a non-empty chat allowlist; fail startup when it is absent.
-- Set `dry_run=true` and `allow_real_writes=false`.
-- Use genuinely read-only database principals. Treat SQL text inspection as defense in depth, not the primary permission boundary.
-- Store credentials only in environment variables or a secret manager. Never parse credentials from `AGENTS.md`, README files, source code, service files, or generated artifacts.
-- Allowlist environments, schemas, repositories, branches, namespaces, file roots, and delivery targets.
-- Bind approval to the original requester, topic, exact operation hash, expiry, and one-time consumption.
-- Separate answer generation from Feishu delivery. Persist the answer before attempting external delivery.
-- Make one Feishu topic one logical Agent thread and process turns FIFO with durable idempotency.
-- Keep production writes disabled. Do not request production write credentials for a read-only assistant.
+The generated starter is intentionally fail-closed and remains `scaffold_only=true`. It includes `CUSTOMER_HANDOFF.md` so a new colleague can see what is complete and what still blocks launch. It is not a live bot until real adapters, a `serve` entrypoint, and authorized live tests exist. Enable only capabilities whose resource and secret checks pass. Keep business and IT answer styles and permissions distinct when both roles use the same bot.
 
-Read [references/security-boundaries.md](references/security-boundaries.md) before adding database, log, deployment, or write tools.
+Follow [references/architecture.md](references/architecture.md) for module boundaries. Put customer-specific facts in instance configuration and the generated knowledge base, never in the reusable Skill.
 
-## Implement in layers
+## Keep hard safety boundaries
 
-Build in this order:
+Read [references/security-boundaries.md](references/security-boundaries.md) before adding database, log, cloud, deployment, or write tools.
 
-1. Preflight and configuration validation.
-2. Feishu event receive/read/reply adapter with allowlists and idempotency.
-3. Durable topic/turn state and restart recovery.
-4. Codex topic runtime with bounded tools and visible terminal outcomes.
-5. Read-only knowledge, code, database, and log tools.
-6. Artifact delivery and exact one-time approval capabilities.
-7. Service installation, health checks, retention, and rollback.
+- Require non-empty chat and environment allowlists for live operation.
+- Default to `dry_run=true`, `allow_real_writes=false`, and dedicated read-only accounts.
+- Treat SQL validation as defense in depth, not as a substitute for database grants.
+- Allowlist schemas, repositories, branches, namespaces, file roots, channels, and delivery targets.
+- Bind any approved write to requester, topic, exact operation hash, environment, expiry, and one-time use.
+- Persist the answer before external delivery; preserve one topic to one Agent thread and FIFO ordering.
+- Never place secret files, state, logs, attachments, internal addresses, or customer raw materials in a reusable package or public repository.
 
-Do not mix project-specific table names, stored procedures, chat IDs, internal addresses, or usernames into the generic framework. Put project facts in local configuration and project-owned references.
+## Validate by stage
 
-## Validate before deployment
-
-Run the skill validator and generated-project checks:
+Run:
 
 ```bash
 python /path/to/skill-creator/scripts/quick_validate.py /path/to/project-agent-bootstrap
@@ -97,35 +132,35 @@ python scripts/validate_scaffold.py /path/to/generated-project
 PYTHONPATH=/path/to/generated-project/src python -m unittest discover -s /path/to/generated-project/tests -v
 ```
 
-The Skill Creator validator imports PyYAML. Run it with an environment that already provides `yaml`; do not add PyYAML to the generated bot merely for this external validation step. `validate_scaffold.py` certifies scaffold hygiene only and intentionally reports `deployment_ready=false`. Live adapter evidence, fault tests, and an implemented `serve` entrypoint require a separate deployment review.
+Then follow [references/acceptance-matrix.md](references/acceptance-matrix.md). Do not collapse these states:
 
-Then follow [references/acceptance-matrix.md](references/acceptance-matrix.md). Test failure paths as first-class behavior: duplicate events, restart during a turn, delivery timeout, revoked auth, SQL denial, missing allowlist, tool timeout, and withdrawn source messages.
+- `ready_to_inventory`
+- `ready_to_scaffold`
+- `ready_for_dry_run`
+- `ready_for_live_readonly`
+- `ready_for_write_capability`
 
-Do not claim deployment readiness when only mocked tests passed. State which live checks remain.
+Do not claim deployment readiness when only the onboarding workspace, knowledge skeleton, scaffold, or mocked tests passed.
+
+Questionnaire booleans are configuration claims, not live evidence. Record actual checks with `mark-check` only after performing them, and store a short non-secret evidence reference:
+
+```bash
+python scripts/onboard_project_bot.py mark-check \
+  --workspace "/absolute/workspace" \
+  --check bot_identity \
+  --status verified \
+  --evidence "test-tenant identity probe passed at 2026-08-20 14:30 +08:00"
+```
 
 ## Deploy and hand off
 
-Before installing or restarting a service:
-
-1. Show the resolved non-secret configuration and intended external effects.
-2. Confirm the queue is idle or use a graceful drain.
-3. Back up the state database.
-4. Confirm `scaffold_only=false`, then install the rendered service definition whose command starts the implemented `serve` entrypoint. Do not install the generated preflight-only template as the bot service.
-5. Verify process health, Feishu event readiness, one dry-run message, and restart recovery.
-6. Record start, stop, status, rollback, log, and secret-rotation procedures.
-
-Never send a real Feishu message, create cloud resources, change permissions, or enable write tools unless the user's request explicitly authorizes that action.
-
-For GitHub publishing, read the exact staged file list and diff, run both a dedicated secret scanner and the bundled heuristic check, and exclude all instance configuration, state, logs, attachments, credentials, internal addresses, and real IDs. If the user did not name a repository, prefer a new private repository; do not silently put company-specific material in a public profile repository.
-
-## Deliverables
+Before installing or restarting a service, show the resolved non-secret plan and intended external effects, obtain authorization, back up state, and verify rollback. A hosted server, customer server, local computer, or cloud host is acceptable only after network, runtime, secret injection, maintenance ownership, monitoring, and recovery checks pass.
 
 Return:
 
-- the completed non-secret intake summary;
-- the generated project path;
-- enabled and disabled capabilities;
-- validation results and live checks not performed;
-- required secret variable names without values;
-- deployment/rollback commands when deployment was requested;
-- a prioritized audit when modernizing an existing bot.
+- completed non-secret intake and missing-resource report;
+- knowledge workspace path, source manifest, generated Wiki/maps, and unresolved evidence gaps;
+- generated bot path and enabled/disabled capabilities;
+- required secret names without values and the selected `env` or TXT-file method;
+- validation evidence and live checks not performed;
+- deployment, status, stop, backup, and rollback instructions when deployment was requested.

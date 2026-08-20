@@ -2,12 +2,14 @@
 
 这是由 `project-agent-bootstrap` 生成的安全起步项目。它提供配置校验、会话状态、幂等事件、只读 SQL 防护和部署模板；飞书与 Codex 的真实适配器需要按项目环境接入。
 
+非技术同事先阅读 `CUSTOMER_HANDOFF.md`；它会直接说明已完成内容和上线前待办。
+
 ## 默认边界
 
 - 实时模式必须配置非空的飞书群白名单。
 - `BOT_DRY_RUN=true`，`BOT_ALLOW_REAL_WRITES=false`。
 - 数据库必须使用专用只读账号；SQL 检查只是第二道防线。
-- 密码、Token、Cookie 和私钥只从本地密钥设施或环境变量注入。
+- 密码、Token、Cookie 和私钥只通过环境变量、本地密钥设施，或受限的本机 TXT 密钥文件注入。
 - 一个飞书话题对应一个 Agent 任务；同一话题内按 FIFO 顺序处理。
 - 回答先持久化，再尝试发送，避免发送超时后丢失结果。
 
@@ -31,7 +33,12 @@ python -m venv .venv
 cp .env.example .env
 ```
 
-把 `.env` 中的非敏感配置补齐，并通过本机密钥设施设置秘密变量。先运行离线预检：
+把 `.env` 中的非敏感配置补齐。秘密值可以使用以下任一方式：
+
+- `BOT_SECRET_MODE=env`：设置对应环境变量。
+- `BOT_SECRET_MODE=file`：复制 `secrets/local-secrets.example.txt` 为 `secrets/local-secrets.txt`，本机填写后执行 `chmod 600 secrets/local-secrets.txt`。
+
+真实 TXT 文件已经被 Git 忽略，不得上传、打印、截图或放入知识库。然后运行离线预检：
 
 ```bash
 .venv/bin/python -m __PACKAGE_NAME__ preflight
@@ -53,7 +60,9 @@ cp .env.example .env
 - `src/__PACKAGE_NAME__/approvals.py`：精确参数、限时、一次性审批账本；默认没有启用任何写能力。
 - `src/__PACKAGE_NAME__/state.py`：SQLite 话题、事件幂等和状态迁移。
 - `src/__PACKAGE_NAME__/runtime.py`：适配器协议与可测试的处理骨架。
+- `src/__PACKAGE_NAME__/secrets.py`：环境变量和受限 TXT 文件密钥解析。
 - `config/bot.example.json`：不含秘密的配置蓝图。
+- `knowledge/raw|wiki|maps|evidence|sync`：由搭建 Skill 生成并维护的项目知识库。
 - `service/`：launchd/systemd 模板；本次选择为 `__SERVICE_KIND__`。
 
 生成的服务文件只运行一次严格预检，不是常驻机器人服务。完成飞书、Codex 和所选连接器适配后，必须把它替换为真实 `serve` 入口并做测试租户 E2E；在此之前 manifest 会保持 `scaffold_only=true`。
