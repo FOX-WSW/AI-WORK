@@ -58,6 +58,34 @@ class ConfigTests(unittest.TestCase):
             with self.assertRaisesRegex(ConfigError, "generic write mode"):
                 BotConfig.from_env(env, live=True)
 
+    def test_secret_mode_must_be_env_or_file(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            with self.assertRaisesRegex(ConfigError, "BOT_SECRET_MODE"):
+                BotConfig.from_env(
+                    {"PROJECT_BOT_ROOT": directory, "BOT_SECRET_MODE": "document"}
+                )
+
+    def test_live_file_secret_mode_requires_safe_file(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            secret_file = root / "secrets" / "local-secrets.txt"
+            secret_file.parent.mkdir()
+            secret_file.write_text("FEISHU_APP_SECRET=value\n", encoding="utf-8")
+            secret_file.chmod(0o600)
+            config = BotConfig.from_env(
+                {
+                    "PROJECT_BOT_ROOT": directory,
+                    "BOT_SECRET_MODE": "file",
+                    "BOT_SECRET_FILE": str(secret_file),
+                    "BOT_ALLOWED_CHAT_IDS": "chat-a",
+                    "BOT_APPROVED_STATE_ROOT": "state",
+                    "BOT_STATE_PATH": "state/bot.sqlite3",
+                },
+                live=True,
+            )
+            self.assertEqual(config.secret_mode, "file")
+            self.assertTrue(config.public_summary()["secret_file_configured"])
+
 
 if __name__ == "__main__":
     unittest.main()

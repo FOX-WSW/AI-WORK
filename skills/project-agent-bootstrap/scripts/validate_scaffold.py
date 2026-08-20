@@ -14,20 +14,42 @@ REQUIRED = (
     ".gitignore",
     ".project-agent-bootstrap.json",
     "AGENTS.md",
+    "CUSTOMER_HANDOFF.md",
     "README.md",
     "config/bot.example.json",
+    "knowledge/raw/source-manifest.json",
+    "knowledge/raw/repository-manifest.json",
+    "knowledge/evidence/quality-report.md",
+    "knowledge/sync/sync-state.json",
+    "knowledge/maps/资料地图.yaml",
+    "knowledge/wiki/项目总览.md",
     "pyproject.toml",
     "tests/test_approvals.py",
     "tests/test_config.py",
     "tests/test_policy.py",
     "tests/test_preflight.py",
     "tests/test_runtime.py",
+    "tests/test_secrets.py",
     "tests/test_state.py",
+    "secrets/local-secrets.example.txt",
 )
-TEXT_SUFFIXES = {"", ".example", ".json", ".md", ".py", ".service", ".template", ".toml"}
+TEXT_SUFFIXES = {
+    "",
+    ".example",
+    ".json",
+    ".md",
+    ".py",
+    ".service",
+    ".template",
+    ".toml",
+    ".txt",
+    ".yaml",
+    ".yml",
+}
 SECRET_ASSIGNMENT = re.compile(
-    r"(?m)^[ \t]*(?:[A-Z0-9_]*(?:PASSWORD|SECRET|TOKEN|PRIVATE_KEY|COOKIE|API_KEY)[A-Z0-9_]*)[ \t]*=[ \t]*([^\s#][^\r\n]*)$"
+    r"(?m)^[ \t]*([A-Z0-9_]*(?:PASSWORD|SECRET|TOKEN|PRIVATE_KEY|COOKIE|API_KEY)[A-Z0-9_]*)[ \t]*=[ \t]*([^\s#][^\r\n]*)$"
 )
+SAFE_SECRET_CONFIG_KEYS = {"BOT_SECRET_MODE", "BOT_SECRET_FILE"}
 STRUCTURED_SECRET = re.compile(
     r'''(?im)["'](?:password|secret|token|private[_-]?key|cookie|api[_-]?key)["']\s*:\s*["']([^"'\r\n]+)["']'''
 )
@@ -97,6 +119,8 @@ def main() -> int:
             or "__SERVICE_KIND__" in text
             or "__INSTALL_ROOT__" in text
             or "__DATABASE_" in text
+            or "__DATABASE_SECRET_FILE_LINES__" in text
+            or "__SECRET_MODE__" in text
         ):
             issues.append(f"unresolved template token: {relative}")
         if "/ABSOLUTE/PROJECT/PATH" in text:
@@ -104,7 +128,10 @@ def main() -> int:
         if PRIVATE_ADDRESS.search(text):
             issues.append(f"private network address found: {relative}")
         for match in SECRET_ASSIGNMENT.finditer(text):
-            value = match.group(1).strip().strip('"\'')
+            key = match.group(1).strip()
+            if key in SAFE_SECRET_CONFIG_KEYS:
+                continue
+            value = match.group(2).strip().strip('"\'')
             if value and value not in {"CHANGE_ME", "<set-locally>"}:
                 issues.append(f"possible embedded secret: {relative}")
                 break
@@ -132,6 +159,8 @@ def main() -> int:
                 issues.append("example config must not contain real chat IDs")
             if config.get("lifecycle", {}).get("scaffold_only") is not True:
                 issues.append("example config must declare lifecycle.scaffold_only=true")
+            if config.get("secrets", {}).get("mode") not in {"env", "file"}:
+                issues.append("config secrets.mode must be env or file")
         except (OSError, json.JSONDecodeError) as exc:
             issues.append(f"invalid config/bot.example.json: {exc}")
 

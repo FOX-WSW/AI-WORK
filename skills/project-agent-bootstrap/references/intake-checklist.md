@@ -1,6 +1,18 @@
 # Project Bot Intake Checklist
 
-Use this checklist to collect only what is needed. Prefer discovering local facts over asking the user to repeat them. Mark missing secrets as `set locally` or `not ready`; never record secret values in this file.
+Use this checklist to collect only what is needed. Prefer discovering local facts over asking the user to repeat them. Ask in small adaptive batches rather than presenting the entire checklist to a non-technical customer. Mark missing secrets as `set locally` or `not ready`; never record secret values in this file.
+
+## 0. Onboarding route
+
+- Starting point: empty project, partial materials, existing bot migration, or bot audit
+- Desired capabilities: document Q&A, code analysis, database diagnosis, log diagnosis, solution drafting, approved business action
+- Customer-facing channel and target roles
+- Raw material mode: reference originals in place or copy supported documents into the knowledge workspace
+- Secret method: environment variables or restricted local TXT file
+
+Missing optional connector resources disable that capability; they do not block a smaller document-only bot.
+
+For a new non-technical colleague, default to document Q&A and let Codex derive the slug, workspace path, and package name. Do not ask the colleague to edit `customer-intake.json`; Codex maintains it from conversational answers. The customer-facing status is `outputs/搭建进度.md`.
 
 ## 1. Project and users
 
@@ -42,6 +54,15 @@ Do not request app secret, user token, bot token, cookies, or master-key content
 - Thread archive/retention rule
 - Whether images and local files may be passed to Codex
 - Weekly quota telemetry needed or not
+
+## 4A. Knowledge construction
+
+- Local document folders, functional designs, operation manuals, training material, issue records, and database design
+- Cloud-document links and authorized fetch identities
+- Original-source manifest, hashes, modification time, owner, authority, and freshness rule
+- Required Wiki pages and deterministic maps
+- Evidence confidence: verified, probable, or unverified
+- Runtime experience review owner and candidate-to-authoritative promotion rule
 
 ## 4. Knowledge and code
 
@@ -89,6 +110,12 @@ Prefer a dedicated read-only principal with no `EXECUTE`, DDL, DML, network pack
 - Rollback version/source
 - Who rotates secrets and how often
 
+### Secret methods
+
+- `env`: store only the variable names in configuration and inject values at runtime.
+- `file`: use a local TXT file with `KEY=VALUE`, exclude it from Git and knowledge ingestion, reject symbolic links, and require mode `0600` on POSIX.
+- Never place real values in intake JSON, generated reports, service definitions, Wiki, maps, logs, screenshots, or publishing bundles.
+
 ## 8. Optional write capabilities
 
 Default to no write capabilities. For each requested capability, collect:
@@ -116,7 +143,9 @@ Default to a new private repository when the destination or intellectual-propert
 
 ## Intake completion states
 
+- `ready_to_inventory`: at least one requested knowledge/source capability has a usable source.
 - `ready_to_scaffold`: project identity and deployment target known; secrets may still be placeholders.
 - `ready_for_dry_run`: Feishu auth and allowlist verified; no real replies required.
 - `ready_for_live_readonly`: live message and read-only tool checks passed.
+- Questionnaire booleans never satisfy the live gate by themselves. Bot identity, event subscription, one test message, Codex runtime, and enabled read-only connectors require recorded non-secret evidence.
 - `ready_for_write_capability`: exact executor and approval workflow independently reviewed.

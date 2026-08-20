@@ -3,7 +3,8 @@
 ## Secret handling
 
 - Keep secret values out of Git, `AGENTS.md`, README files, service definitions, logs, screenshots, generated documents, and prompts.
-- Use environment-variable names, OS keychains, vault references, or deployment-managed secret injection.
+- Use environment-variable names, OS keychains, vault references, deployment-managed secret injection, or an explicitly selected local TXT secret file.
+- A local TXT secret file must use `KEY=VALUE`, stay outside knowledge ingestion and publishing, be ignored by Git, reject symbolic links, and use POSIX mode `0600`. Never print its values during validation.
 - Provide `.env.example`, never a populated `.env`.
 - Redact authentication headers, cookies, tokens, passwords, connection strings, phone numbers, and private keys before logging.
 - Scan the exact Git diff before publishing.
@@ -19,6 +20,7 @@ Refuse live startup when any required control is missing:
 - unknown environment label;
 - state directory outside the approved root;
 - real writes enabled without a capability registry.
+- file-based secret mode with a missing, symlinked, malformed, or overly permissive TXT file.
 
 Allow a separate `--preflight` or dry-run mode to report missing inputs without sending messages.
 

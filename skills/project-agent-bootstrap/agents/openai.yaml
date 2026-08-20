@@ -1,4 +1,4 @@
 interface:
-  display_name: "项目智能机器人快速搭建"
-  short_description: "收集飞书与数据源配置，生成安全可部署的项目智能机器人"
-  default_prompt: "Use $project-agent-bootstrap to collect my project requirements and scaffold a secure Feishu project bot."
+  display_name: "项目机器人搭建工厂"
+  short_description: "让新同事从零完成问卷、知识库与飞书机器人项目"
+  default_prompt: "Use $project-agent-bootstrap：我想从零搭建自己的飞书项目机器人，请先用业务语言问我必要问题。"

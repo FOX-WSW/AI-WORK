@@ -1,6 +1,21 @@
 # Reference Architecture
 
-## Target flow
+## Product flow
+
+```text
+guided onboarding
+  -> staged resource assessment
+  -> source inventory and provenance
+  -> raw/wiki/maps/evidence/sync knowledge build
+  -> capability-aware bot scaffold
+  -> dry-run and live read-only gates
+  -> authorized deployment
+  -> reviewed runtime knowledge candidates
+```
+
+Keep the knowledge-maintenance job separate from the runtime answer path. Customers see one Skill, but onboarding, knowledge compilation, bot runtime, and scheduled maintenance must have independent state and failure handling.
+
+## Runtime flow
 
 ```text
 Feishu event adapter
@@ -30,8 +45,15 @@ Keep these modules separate even for a small project:
 6. `policy`: authorization and side-effect checks independent of business intent.
 7. `delivery`: reply, artifact, mention, retry, and reconciliation.
 8. `operations`: health, metrics, retention, backup, migration, and service control.
+9. `knowledge_builder`: source inventory, provenance, Wiki/maps generation, conflict reporting, and reviewed promotion.
 
 Do not place configuration parsing, database connections, Feishu delivery, business heuristics, and state transitions in one event handler.
+
+## Knowledge model
+
+Preserve original evidence under `raw` or by immutable reference. Build human-readable synthesis under `wiki` and deterministic navigation under `maps`. Store conflicts, confidence, and verification under `evidence`; store incremental freshness under `sync`.
+
+The core cross-source relationship is `business function -> page -> API -> service -> code -> table/view -> log keyword -> known issue`. Every verified relationship must cite source-manifest IDs. Runtime findings enter a candidate queue and cannot directly overwrite authoritative knowledge.
 
 ## Reasoning versus policy
 

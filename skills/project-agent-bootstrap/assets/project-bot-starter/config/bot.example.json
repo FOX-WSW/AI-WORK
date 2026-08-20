@@ -1,6 +1,10 @@
 {
   "name": "__BOT_TITLE__",
   "service": "__SERVICE_KIND__",
+  "secrets": {
+    "mode": "__SECRET_MODE__",
+    "file_path": "./secrets/local-secrets.txt"
+  },
   "feishu": {
     "region": "feishu",
     "bot_name": "__FEISHU_BOT_NAME__",
@@ -16,6 +20,24 @@
   },
   "supported_database_engines": __DATABASE_ENGINES_JSON__,
   "database_sources": __DATABASE_SOURCES_JSON__,
+  "knowledge": {
+    "root": "./knowledge",
+    "raw": "./knowledge/raw",
+    "wiki": "./knowledge/wiki",
+    "maps": "./knowledge/maps",
+    "evidence": "./knowledge/evidence",
+    "sync": "./knowledge/sync"
+  },
+  "roles": {
+    "business": {
+      "answer_style": "business_language",
+      "show_internal_evidence": false
+    },
+    "it": {
+      "answer_style": "diagnostic",
+      "show_internal_evidence": true
+    }
+  },
   "query_policy": {
     "read_only_principal_required": true,
     "timeout_seconds": 30,

@@ -4,7 +4,7 @@
 - Treat a Feishu topic as one logical Agent task and preserve FIFO ordering within the topic.
 - Keep authentication, authorization, idempotency, approvals, and delivery in deterministic adapters outside the model prompt.
 - Never read credentials from this file, README files, source code, or generated artifacts.
-- Never log secret values, authentication headers, cookies, connection strings, or raw sensitive query results.
+- Never log secret values, authentication headers, cookies, connection strings, or raw sensitive query results. Secrets may come from environment variables or a restricted local TXT file; never ingest that file into knowledge or Git.
 - Require a dedicated read-only database principal. SQL text validation is defense in depth only.
 - Add each tool as a bounded capability with an input schema, allowlist, timeout, output limit, audit fields, and explicit failure behavior.
 - Keep `dry_run=true` and `allow_real_writes=false` until the user explicitly requests and reviews one exact write capability.
