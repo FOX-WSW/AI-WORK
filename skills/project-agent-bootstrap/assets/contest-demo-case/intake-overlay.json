@@ -1,0 +1,57 @@
+{
+  "project": {
+    "business_scope": "面向家居制造项目团队，提供脱敏项目资料问答、功能入口定位和代码只读检索。",
+    "out_of_scope": [
+      "生产数据写入",
+      "自动发布",
+      "权限调整",
+      "未经审核的知识自动启用"
+    ],
+    "owners": [
+      "项目机器人管理员"
+    ],
+    "target_roles": [
+      "business",
+      "it",
+      "developer"
+    ]
+  },
+  "knowledge": {
+    "local_documents": [
+      {
+        "label": "家居项目脱敏资料",
+        "path": "./input"
+      }
+    ],
+    "functional_designs": [],
+    "cloud_documents": []
+  },
+  "repositories": [
+    {
+      "name": "order-change-service",
+      "local_path": "./sample-repo",
+      "url": "",
+      "allowed_branches": [
+        "main"
+      ],
+      "secret_refs": []
+    }
+  ],
+  "databases": [],
+  "log_sources": [],
+  "deployment": {
+    "os": "Linux",
+    "architecture": "x86_64",
+    "service_manager": "systemd",
+    "working_directory": "/opt/furniture-delivery-assistant",
+    "host_access_ready": false,
+    "network_ready": false,
+    "maintenance_owner": ""
+  },
+  "safety": {
+    "dry_run": true,
+    "allow_real_writes": false,
+    "read_only_by_default": true,
+    "knowledge_write_requires_review": true
+  }
+}

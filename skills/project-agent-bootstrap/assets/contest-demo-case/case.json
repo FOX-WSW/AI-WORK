@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "case_id": "furniture-delivery-bot-factory",
+  "title": "家居制造项目交付机器人搭建样板",
+  "user_request": "我想部署一个自己的项目机器人，先支持项目资料问答和代码检索，但我不懂技术配置。",
+  "project_name": "家居制造项目交付助手",
+  "slug": "furniture-delivery-assistant",
+  "channel": "feishu",
+  "deployment": "systemd",
+  "secret_mode": "env",
+  "raw_mode": "copy",
+  "capabilities": [
+    "document_qa",
+    "code_analysis"
+  ],
+  "materials": "materials",
+  "repository": "sample-repo",
+  "intake_overlay": "intake-overlay.json"
+}

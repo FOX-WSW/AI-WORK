@@ -1,6 +1,6 @@
 ---
 name: project-agent-bootstrap
-description: Guide a non-technical customer from “I want my own bot” through adaptive resource intake, raw/wiki/maps knowledge-base construction, secure project-bot scaffolding, integration, validation, and authorized deployment. Use when a user wants to create, reproduce, modernize, audit, or deploy a project bot from local documents, cloud documents, databases, code repositories, logs, and project environments.
+description: 'Guide a non-technical customer through the complete zero-to-bot lifecycle: scenario definition, adaptive resource intake, knowledge and evidence design, secure project-bot scaffolding, channel and tool integration, governance, validation, authorized deployment, handoff, and continuous operation. Use when a user wants to create, reproduce, modernize, audit, deploy, or operate a project bot from local documents, cloud documents, databases, code repositories, logs, and project environments.'
 ---
 
 # Project Agent Bootstrap
@@ -10,14 +10,25 @@ Turn incomplete customer materials into a traceable knowledge base and a safely 
 ## Route the request
 
 - `onboard`: the user says “我想部署一个自己的机器人” or cannot provide a technical specification. Discover what already exists, ask only for missing decisions, and produce a resource-gap report.
-- `build-knowledge`: inventory original sources, create the `raw/wiki/maps/evidence/sync` structure, and perform the first evidence-based knowledge pass.
+- `build-knowledge`: inventory original sources, create the `raw/wiki/maps/evidence/sync` structure, perform the first evidence-based knowledge pass, and design the project-specific RAG / live-data routing boundary.
 - `build-bot`: generate or extend the project-bot starter and connect only the capabilities supported by ready resources.
 - `integrate`: connect messaging, Codex, cloud documents, databases, repositories, logs, or artifact delivery.
 - `audit`: inspect an existing bot and rank safety, reliability, knowledge, and deployment gaps.
+- `contest-demo`: demonstrate the Skill itself as a project-bot factory with a sanitized golden case, reproducible validation, and an evidence pack that distinguishes fixture results from live results.
 - `deploy-and-operate`: validate, install, verify, monitor, roll back, or maintain a service only after the user authorizes the external changes.
 - `publish`: publish only sanitized generic Skill or scaffold files to an explicitly selected destination.
 
 Combine modes when needed, but report a separate readiness state for inventory, scaffold, dry-run, and live read-only operation.
+
+## Deliver the complete zero-to-bot lifecycle
+
+Read [references/zero-to-bot-lifecycle.md](references/zero-to-bot-lifecycle.md) when the request spans more than one mode, when the user asks for a complete project bot, or when demonstrating reusability. Treat knowledge-base construction as one workstream in the lifecycle, not as the whole product.
+
+The reusable sequence is:
+
+`scenario and boundaries -> resource readiness -> knowledge and evidence -> secure scaffold -> channel and identity -> bounded tools -> policy and delivery -> validation and handoff -> operation and evolution`
+
+Do not skip directly from source ingestion to a deployment claim. At every stage, preserve the input evidence, explicit gaps, readiness gate, and handoff artifact. Project-specific documents, mappings, credentials, rules, and endpoints belong in the generated instance; reusable methods, templates, checks, and adapters belong in this Skill.
 
 ## Start with guided onboarding
 
@@ -58,7 +69,7 @@ python scripts/onboard_project_bot.py inventory --workspace "/absolute/output/pa
 
 ## Build the knowledge base before the live bot
 
-Read [references/knowledge-build-workflow.md](references/knowledge-build-workflow.md) before performing first-round semantic organization. Preserve original evidence and provenance. Do not invent table relationships, business statuses, code entry points, or source priority.
+Read [references/knowledge-build-workflow.md](references/knowledge-build-workflow.md) before performing first-round semantic organization. When databases, business APIs, logs, repositories, or project-specific retrieval are in scope, also read [references/data-and-rag-routing.md](references/data-and-rag-routing.md). Preserve original evidence and provenance. Do not invent table relationships, business statuses, code entry points, or source priority.
 
 The standard knowledge layout is:
 
@@ -74,6 +85,8 @@ knowledge/
 Prefer bounded keyword and relationship-map retrieval for rapidly changing project documents and code. Use semantic retrieval only when the source is stable and it materially improves recall. The most useful navigation chain is:
 
 `business function -> page -> API -> service -> code -> table/view -> log keyword -> known issue`
+
+Do not solve every source with RAG. Stable documents may use keyword + vector hybrid retrieval and reranking. Exact identifiers use keyword or structured lookup. Current order, inventory, production, and delivery facts come from authorized read-only database/API queries. Logs are narrowed by environment, service, time, and error code before the model explains them. The Agent selects the route; deterministic policy and source systems enforce identity, scope, and permissions.
 
 After `inventory`, produce a useful first pass rather than returning empty placeholders: populate the project overview, source map, environment boundary, repository index, and role/code/log maps from direct intake or file evidence. Clearly mark questionnaire-only facts as `provided_unverified`; never invent business flows, table relationships, or code entry points. Runtime experience must enter a candidate area first. Only reviewed evidence may update authoritative Wiki or maps. Keep scheduled source synchronization separate from answering user questions.
 
@@ -109,6 +122,20 @@ python scripts/onboard_project_bot.py build-bot --workspace "/absolute/workspace
 The generated starter is intentionally fail-closed and remains `scaffold_only=true`. It includes `CUSTOMER_HANDOFF.md` so a new colleague can see what is complete and what still blocks launch. It is not a live bot until real adapters, a `serve` entrypoint, and authorized live tests exist. Enable only capabilities whose resource and secret checks pass. Keep business and IT answer styles and permissions distinct when both roles use the same bot.
 
 Follow [references/architecture.md](references/architecture.md) for module boundaries. Put customer-specific facts in instance configuration and the generated knowledge base, never in the reusable Skill.
+
+## Demonstrate the project-bot factory
+
+When the user wants a competition rehearsal or proof that the method can be copied to another project, read [references/contest-demo-workflow.md](references/contest-demo-workflow.md). Keep the reusable Skill as the product and treat the bundled manufacturing case only as sanitized evidence.
+
+Run the offline fallback in a new output directory:
+
+```bash
+python scripts/run_contest_demo.py \
+  --case assets/contest-demo-case \
+  --output "/absolute/new/demo-output"
+```
+
+Present the generated progress report, knowledge maps, customer handoff, validation logs, tests, and evidence manifest. Label this run `offline_reproducible_fixture`; it must not be described as a live AI result. A live competition run starts from the user's one-sentence request and follows the normal onboarding flow. Neither path may change `scaffold_only=true` or `deployment_ready=false` until real adapters and authorized live acceptance tests pass.
 
 ## Keep hard safety boundaries
 

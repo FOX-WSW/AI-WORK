@@ -97,6 +97,8 @@ def main() -> int:
                 issues.append("manifest must declare secrets_embedded=false")
             if manifest.get("scaffold_only") is not True:
                 issues.append("generated scaffold must keep scaffold_only=true")
+            if manifest.get("deployment_ready") is not False:
+                issues.append("generated scaffold must declare deployment_ready=false")
             deployment_blockers.append(
                 "scaffold validator cannot certify deployment readiness; complete live adapter tests"
             )

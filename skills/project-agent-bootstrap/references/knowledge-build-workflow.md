@@ -48,6 +48,8 @@ Record source IDs for every verified map entry. Conflicting sources go to the qu
 
 ## Retrieval design
 
+When the project includes databases, business APIs, logs, code, or a reusable retrieval layer, read [data-and-rag-routing.md](data-and-rag-routing.md) and produce its routing, permission, and evaluation artifacts. Treat this as part of project knowledge-foundation delivery, not as an optional prompt-tuning step.
+
 For actively changing project content, prefer exact and normalized keyword search over whole-corpus prompts. Expand business terms with the glossary, then traverse bounded relationships. Retrieve the smallest evidence set that can answer the question.
 
 Recommended lookup order:

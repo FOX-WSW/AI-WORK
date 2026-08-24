@@ -316,6 +316,7 @@ def main() -> int:
         "database_sources": database_sources,
         "secrets_embedded": False,
         "scaffold_only": True,
+        "deployment_ready": False,
     }
     (output / ".project-agent-bootstrap.json").write_text(
         json.dumps(manifest, ensure_ascii=False, indent=2) + "\n",

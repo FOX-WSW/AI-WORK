@@ -50,6 +50,15 @@
 
 Every path must become either a verified success, a scheduled retry, a cancellation, or a visible failure. No message may remain silently `processing`.
 
+## Contest demo evidence
+
+- The bundled fixture contains no symlinks, secrets, private addresses, customer identifiers, or live endpoints.
+- One command creates a new onboarding workspace, inventories sanitized documents and code, generates a bot project, validates it, runs its tests, and writes an evidence pack.
+- The evidence pack records source hashes, readiness stages, generated file counts, validator status, test count, elapsed time, and skipped live checks.
+- Fixture evidence is labeled `offline_reproducible_fixture` and is never presented as a live AI result.
+- The generated manifest keeps `scaffold_only=true` and explicitly declares `deployment_ready=false`.
+- The demo performs no Feishu write, deployment, repository publication, database access, or other external mutation.
+
 ## Live read-only checks
 
 Perform only when authorized:
