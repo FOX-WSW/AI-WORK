@@ -1,0 +1,34 @@
+name: Skill CI
+
+on:
+  push:
+    branches: [main, "codex/**"]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run Skill tests
+        run: python -m unittest discover -s skills/project-agent-bootstrap/tests -v
+      - name: Run reproducible contest loop
+        run: >-
+          python skills/project-agent-bootstrap/scripts/run_contest_demo.py
+          --case skills/project-agent-bootstrap/assets/contest-demo-case
+          --output "${{ runner.temp }}/contest-demo"
+      - name: Verify evidence JSON
+        run: python -m json.tool "${{ runner.temp }}/contest-demo/evidence/contest-evidence.json"
+      - name: Upload sanitized evidence pack
+        uses: actions/upload-artifact@v4
+        with:
+          name: project-bot-factory-contest-evidence
+          path: "${{ runner.temp }}/contest-demo/evidence"
+          if-no-files-found: error
